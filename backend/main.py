@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import json
 from datetime import timedelta
 from typing import List
@@ -27,6 +28,17 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Learners Smart Hub - Backend")
 
 # 3. DATABASE DEPENDENCY
+=======
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from database import SessionLocal
+from models import User, Lesson, Progress
+from ai_brain import ask_gemini
+
+app = FastAPI()
+
+# This part saves RAM by closing database connections automatically
+>>>>>>> ab8a55b (Added Linear Lock and User Access logic.)
 def get_db():
     db = SessionLocal()
     try:
@@ -34,6 +46,7 @@ def get_db():
     finally:
         db.close()
 
+<<<<<<< HEAD
 # 4. HELPER LOGIC (The "Engine" of the Hub)
 
 def mark_as_complete(user_id: int, lesson_id: int, db: Session):
@@ -119,10 +132,41 @@ def check_access(
     prev_lesson = db.query(Lesson).filter(Lesson.order_index == lesson.order_index - 1).first()
     progress = db.query(Progress).filter(
         Progress.user_id == current_user.id,
+=======
+@app.get("/")
+def home():
+    return {"status": "Smart Hub Online", "machine": "HP 840 G2 Ready"}
+
+# This route checks if a user can see a specific lesson
+@app.get("/check-access/{user_email}/{lesson_id}")
+def check_access(user_email: str, lesson_id: int, db: Session = Depends(get_db)):
+    # 1. Find the user by EMAIL (fixing the 'username' error)
+    user = db.query(User).filter(User.email == user_email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 2. Teachers get instant access
+    if user.role == "teacher":
+        return {"access": True, "message": "Teacher bypass active."}
+
+    # 3. Logic for Students
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    if lesson.order_index == 1:
+        return {"access": True, "message": "First lesson is open."}
+
+    # Check if the previous lesson was finished
+    prev_lesson = db.query(Lesson).filter(Lesson.order_index == lesson.order_index - 1).first()
+    progress = db.query(Progress).filter(
+        Progress.user_id == user.id,
+>>>>>>> ab8a55b (Added Linear Lock and User Access logic.)
         Progress.lesson_id == prev_lesson.id,
         Progress.is_completed == True
     ).first()
 
+<<<<<<< HEAD
     if not progress:
         raise HTTPException(status_code=403, detail=f"Finish Lesson {prev_lesson.order_index} first.")
     
@@ -156,3 +200,15 @@ def submit_lesson(
 def ask_tutor(question: str, user: User = Depends(get_current_user)):
     """Secure AI Support: Only for logged-in users."""
     return {"response": ask_gemini(question)}
+=======
+    if progress:
+        return {"access": True, "message": "Access Granted."}
+    
+    return {"access": False, "message": f"LOCKED: Finish Lesson {lesson.order_index - 1} first."}
+
+@app.post("/ask-tutor/")
+def ask_tutor(question: str):
+    # This sends your question to Gemini
+    response = ask_gemini(f"Explain this simply for a student: {question}")
+    return {"tutor_response": response}
+>>>>>>> ab8a55b (Added Linear Lock and User Access logic.)
