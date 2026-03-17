@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Text, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 import datetime
@@ -10,18 +10,19 @@ class Course(Base):
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True, index=True) # Changed from username to email
-    password_hash = Column(String) # This will store the scrambled version
-    role = Column(String) # "teacher" or "student"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True)
+    # VERIFY THIS NAME BELOW
+    hashed_password = Column(String) 
+    role = Column(String, default="student")
 
 class Lesson(Base):
     __tablename__ = "lessons"
-    id = Column(Integer, primary_key=True)
-    course_id = Column(Integer, ForeignKey("courses.id"))
+    id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
-    content = Column(String)
-    order_index = Column(Integer) # This is the "Lock" number (1, 2, 3...)
+    lesson_type = Column(String) # "quiz" or "practical"
+    correct_answers = Column(String, nullable=True) # e.g., "A,B,C"
+    grading_criteria = Column(Text, nullable=True) # The "Key" for the AI
 
 class Assessment(Base):
     __tablename__ = "assessments"
@@ -33,7 +34,7 @@ class Assessment(Base):
 
 class Progress(Base):
     __tablename__ = "progress"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    lesson_id = Column(Integer, ForeignKey("lessons.id"))
-    is_completed = Column(Boolean, default=False)
+    lesson_id = Column(Integer)
+    is_completed = Column(Boolean, default=False) 

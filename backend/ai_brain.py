@@ -1,5 +1,5 @@
-import os
-import google.generativeai as genai
+from google import genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -7,16 +7,16 @@ api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
 def ask_gemini(prompt):
-    # UPDATED to the model your key actually supports:
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    # CHANGED: 1.5-flash is the most stable and light for your hardware
+    model = genai.GenerativeModel('gemini-1.5-flash') 
     response = model.generate_content(prompt)
     return response.text
 
 if __name__ == "__main__":
     print("Connecting to the Brain...")
     try:
-        # Final test with the correct model
-        result = ask_gemini("Confirm system status for HP 840 G2.")
+        # Simple test to see if the connection is alive
+        result = ask_gemini("Say: System Online")
         print(f"AI Response: {result}")
     except Exception as e:
         print(f"Error: {e}")
